@@ -2,49 +2,61 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Simple, clean styles - no theme switching */
+/* Custom styles based on previous project */
 body {
-  font-family: 'Arial', sans-serif;
+  font-family: 'Arial', sans-serif !important;
   min-height: 100vh; 
   display: flex;
   flex-direction: column;
   margin: 0;
   padding: 0;
-  background: url('/images/contentBg.jpg') center/cover no-repeat, #f5f5f5;
-  color: #171717;
+  background: url('/images/contentBg.jpg') center/cover no-repeat, #f5f5f5 !important;
 }
 
-/* Basic reset */
 body, h1, h2, p, ul, li {
   margin: 0;
   padding: 0;
 }
 
-/* Header/Navbar styling from previous project */
-header {
+/* Force light mode always */
+:root {
+  --background: #f5f5f5;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #f5f5f5 !important;
+    --foreground: #171717 !important;
+  }
+}
+
+/* Header/Navigation */
+.custom-header {
   background-color: #333 !important;
-  padding: 10px;
+  padding: 12px 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
   box-shadow: 0 4px 8px rgba(89, 74, 48, 0.4);
 }
 
-.logo a {
+.custom-header .logo a {
   text-decoration: none;
-  color: #fff;
+  color: #fff !important;
   font-size: 1.5em;
-  display: flex;
-  align-items: center; /* Center align logo and text */
+  font-weight: bold;
 }
 
-/* Search container styling */
+/* Search Container */
 .search-container {
   display: flex;
   align-items: center; 
   border-radius: 5px;
   overflow: hidden;
-  width: 500px; 
+  width: 400px; 
+  max-width: 400px;
+  margin: 0 20px;
 }
 
 .search-container form {
@@ -54,82 +66,64 @@ header {
 
 .search-container input[type="text"] {
   flex: 1;
-  padding: 10px;
+  padding: 12px 16px;
   border: none;
   outline: none;
-  width: 100%; 
+  width: 100%;
+  font-size: 14px;
 }
 
 .search-container button[type="submit"] {
-  background-color: #4CAF50;
-  color: #fff;
+  background-color: #4CAF50 !important;
+  color: #fff !important;
   border: none;
-  padding: 10px 20px;
+  padding: 12px 24px;
   cursor: pointer;
   transition: background-color 0.3s ease;
-  border-radius: 0 5px 5px 0; 
+  border-radius: 0 5px 5px 0;
+  font-weight: 600;
+  font-size: 14px;
 }
 
 .search-container button:hover {
-  background-color: #45a049;
+  background-color: #45a049 !important;
 }
 
-/* Navbar links */
-nav ul {
+/* Navigation Links */
+.custom-nav ul {
   list-style-type: none;
   display: flex;
-  align-items: center; /* Center align all items vertically */
+  margin: 0;
+  padding: 0;
+  align-items: center;
 }
 
-nav ul li {
-  margin-right: 20px;
-  display: flex;
-  align-items: center; /* Center align each list item */
+.custom-nav ul li {
+  margin-left: 24px;
 }
 
-nav a {
+.custom-nav a {
   text-decoration: none;
-  color: #fff;
-  font-weight: bold;
-  display: flex;
-  align-items: center; /* Center align link content */
-  padding: 8px 0; /* Add some vertical padding to match button height */
-}
-
-/* Button styling for navbar buttons */
-nav button {
-  background-color: #4CAF50;
-  color: #fff;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-weight: bold;
+  color: #fff !important;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 8px 12px;
+  border-radius: 4px;
   transition: background-color 0.3s ease;
-  display: flex;
-  align-items: center; /* Center align button content */
 }
 
-nav button:hover {
-  background-color: #45a049;
-}
-
-nav button.sign-out {
-  background-color: #dc3545;
-}
-
-nav button.sign-out:hover {
-  background-color: #c82333;
+.custom-nav a:hover {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 /* Item Cards */
 .item-card {
   text-align: center;
+  margin: 10px;
   background-color: #fff !important;
   padding: 15px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  height: 300px;
-  width: 250px;
+  height: 300px; 
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -189,7 +183,7 @@ nav button.sign-out:hover {
 /* Homepage Hero Section */
 .index-section {
   position: relative;
-  height: calc(100vh - 76px); /* Subtract header height */
+  height: calc(100vh - 120px); /* Subtract header height (60px) and footer height (60px) */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -202,7 +196,9 @@ nav button.sign-out:hover {
   left: 0;
   width: 100%;
   height: 100%;
-  background: url('/images/imageBg.png') center/cover no-repeat;
+  background: url('/images/imageBg.png') no-repeat;
+  background-size: 100% 100%;
+  opacity: 0.8;
   z-index: 1;
 }
 
@@ -255,9 +251,27 @@ nav button.sign-out:hover {
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
 }
 
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+  .introduction-banner h1 {
+    font-size: 2.5rem;
+  }
+  
+  .introduction-banner p {
+    font-size: 1.2rem;
+  }
+  
+  .button-container {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .button-container1 {
+    width: 200px;
+  }
+}
 
-
-/* Line clamp utilities for text truncation */
+/* Text truncation utilities */
 @layer utilities {
   .line-clamp-1 {
     overflow: hidden;
@@ -267,10 +281,10 @@ nav button.sign-out:hover {
   }
   
   .line-clamp-2 {
-    overflow: hidden;
     display: -webkit-box;
-    -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
   
   .line-clamp-3 {

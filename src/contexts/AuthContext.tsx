@@ -7,8 +7,8 @@ import { supabase } from '@/lib/supabase'
 interface AuthContextType {
   user: User | null
   loading: boolean
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>
-  signUp: (email: string, password: string, metadata?: { username: string }) => Promise<{ error: Error | null }>
+  signIn: (email: string, password: string) => Promise<{ error: any }>
+  signUp: (email: string, password: string, metadata?: { username: string }) => Promise<{ error: any }>
   signOut: () => Promise<void>
 }
 
@@ -19,64 +19,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    let mounted = true
-
-    const initializeAuth = async () => {
-      try {
-        // Clear any existing sessions first to avoid token errors
-        await supabase.auth.signOut()
-        
-        // Get fresh session
-        const { data: { session }, error } = await supabase.auth.getSession()
-        
-        if (error) {
-          console.warn('Session error, clearing tokens:', error.message)
-          await supabase.auth.signOut()
-          if (mounted) {
-            setUser(null)
-            setLoading(false)
-          }
-          return
-        }
-
-        if (mounted) {
-          setUser(session?.user ?? null)
-          setLoading(false)
-        }
-      } catch (error) {
-        console.warn('Auth initialization error:', error)
-        if (mounted) {
-          setUser(null)
-          setLoading(false)
-        }
-      }
-    }
-
-    initializeAuth()
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      setLoading(false)
+    })
 
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth event:', event)
-      
-      if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
-        if (mounted) {
-          setUser(session?.user ?? null)
-          setLoading(false)
-        }
-      } else if (event === 'SIGNED_IN') {
-        if (mounted) {
-          setUser(session?.user ?? null)
-          setLoading(false)
-        }
-      }
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      setLoading(false)
     })
 
-    return () => {
-      mounted = false
-      subscription.unsubscribe()
-    }
+    return () => subscription.unsubscribe()
   }, [])
 
   const signIn = async (email: string, password: string) => {

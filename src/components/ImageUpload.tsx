@@ -82,6 +82,7 @@ export default function ImageUpload({
       onChange(null)
     } catch (error) {
       console.error('Delete error:', error)
+      // Still remove from UI even if deletion fails
       onChange(null)
     }
   }

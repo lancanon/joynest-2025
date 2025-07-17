@@ -232,34 +232,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Function to create sample test data
-CREATE OR REPLACE FUNCTION create_sample_data()
-RETURNS TEXT AS $$
-DECLARE
-  user1_id UUID;
-  user2_id UUID;
-  item1_id UUID;
-  item2_id UUID;
-BEGIN
-  -- Create test users (only use for testing!)
-  SELECT create_test_user('alice@test.com', 'password123', 'alice_seller') INTO user1_id;
-  SELECT create_test_user('bob@test.com', 'password123', 'bob_buyer') INTO user2_id;
-  
-  -- Create sample items
-  INSERT INTO items (title, description, price, user_id, image_url) VALUES
-    ('Vintage Camera', 'Beautiful vintage film camera in excellent condition', 150.00, user1_id, 'https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=400'),
-    ('Mountain Bike', 'Well-maintained mountain bike, perfect for trails', 300.00, user2_id, 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400'),
-    ('Coffee Table Book', 'Collection of photography books', 25.00, user1_id, 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400')
-  RETURNING id INTO item1_id;
-  
-  -- Create sample offers
-  INSERT INTO offers (item_id, user_id, amount, status) VALUES
-    (item1_id, user2_id, 120.00, 'pending'),
-    (item1_id, user2_id, 140.00, 'rejected');
-  
-  RETURN 'Sample data created successfully!';
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 
 -- Quick reset function for testing
 CREATE OR REPLACE FUNCTION reset_test_data()

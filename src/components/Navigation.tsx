@@ -1,30 +1,20 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useAuth } from '@/contexts/AuthContext'
-import { ShoppingBag } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase, Profile } from '@/lib/supabase'
 
 export default function Navigation() {
   const { user, signOut } = useAuth()
   const [profile, setProfile] = useState<Profile | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
-  const router = useRouter()
-  const searchParams = useSearchParams()
 
   useEffect(() => {
     if (user) {
       fetchProfile()
     }
   }, [user])
-
-  useEffect(() => {
-    // Get search query from URL params
-    const query = searchParams?.get('search') || ''
-    setSearchQuery(query)
-  }, [searchParams])
 
   const fetchProfile = async () => {
     if (!user) return
@@ -56,80 +46,99 @@ export default function Navigation() {
     signOut()
   }
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (searchQuery.trim()) {
-      router.push(`/browse?search=${encodeURIComponent(searchQuery.trim())}`)
-    } else {
-      router.push('/browse')
-    }
-  }
-
   return (
-    <header>
-      <div className="logo">
-        <Link href="/">
-          <ShoppingBag className="h-6 w-6 text-green-500 inline mr-3" />
-          <span>Joynest</span>
-        </Link>
-      </div>
+    <nav style={{ backgroundColor: '#333333', height: '60px' }}>
+      <div className="max-w-7xl mx-auto px-8 h-full">
+        <div className="grid grid-cols-3 items-center h-full">
+          {/* Left side - Logo */}
+          <div className="flex items-center justify-start" style={{ marginLeft: '20px' }}>
+            <Link href="/" className="flex items-center text-white no-underline" style={{ textDecoration: 'none', gap: '12px' }}>
+              <Image
+                src="/images/jnLogo.png"
+                alt="Joynest Logo"
+                width={32}
+                height={32}
+                className="object-contain"
+              />
+              <span style={{ fontSize: '1.4em', fontWeight: '500', color: 'white', marginTop: '12px' }}>Joynest</span>
+            </Link>
+          </div>
 
-      {/* Search Container */}
-      <div className="search-container">
-        <form onSubmit={handleSearch}>
-          <input
-            type="text"
-            placeholder="Search items..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <button type="submit">Search</button>
-        </form>
-      </div>
+          {/* Center - Search bar */}
+          <div className="flex items-center justify-center">
+            <div className="flex">
+              <input
+                type="text"
+                placeholder="Search"
+                style={{
+                  padding: '9px 14px',
+                  borderRadius: '4px 0 0 4px',
+                  border: 'none',
+                  outline: 'none',
+                  width: '450px',
+                  fontSize: '14px'
+                }}
+              />
+              <button 
+                type="submit" 
+                style={{
+                  backgroundColor: '#4CAF50',
+                  color: 'white',
+                  padding: '9px 18px',
+                  border: 'none',
+                  borderRadius: '0 4px 4px 0',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  fontSize: '14px'
+                }}
+              >
+                Search
+              </button>
+            </div>
+          </div>
 
-      {/* Navigation */}
-      <nav>
-        <ul>
-          <li>
-            <Link href="/browse">Browse</Link>
-          </li>
-          {user && (
-            <li>
-              <Link href="/items/new">Sell</Link>
-            </li>
-          )}
-          {user ? (
-            <>
-              <li>
-                <Link href="/profile">
-                  {profile?.username ? `@${profile.username}` : 'Profile'}
+          {/* Right side - Navigation */}
+          <div className="flex items-center justify-end" style={{ gap: '28px', marginRight: '30px' }}>
+            <Link href="/browse" style={{ color: 'white', textDecoration: 'none', fontWeight: 'bold', fontSize: '17px' }}>
+              Browse
+            </Link>
+            
+            <Link href="/items/new" style={{ color: 'white', textDecoration: 'none', fontWeight: 'bold', fontSize: '17px' }}>
+              Sell
+            </Link>
+
+            {user ? (
+              <>
+                <Link href="/profile" style={{ color: 'white', textDecoration: 'none', fontWeight: 'bold', fontSize: '17px' }}>
+                  Profile
                 </Link>
-              </li>
-              <li>
                 <button
                   onClick={handleSignOut}
-                  className="sign-out"
+                  style={{ 
+                    color: 'white', 
+                    background: 'none', 
+                    border: 'none', 
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    fontSize: '15px'
+                  }}
                 >
                   Sign Out
                 </button>
-              </li>
-            </>
-          ) : (
-            <>
-              <li>
-                <Link href="/auth/login">Login</Link>
-              </li>
-              <li>
-                <button
-                  onClick={() => router.push('/auth/register')}
-                >
+              </>
+            ) : (
+              <>
+                <Link href="/auth/login" style={{ color: 'white', textDecoration: 'none', fontWeight: 'bold', fontSize: '17px' }}>
+                  Login
+                </Link>
+                <Link href="/auth/register" style={{ color: 'white', textDecoration: 'none', fontWeight: 'bold', fontSize: '17px' }}>
                   Sign Up
-                </button>
-              </li>
-            </>
-          )}
-        </ul>
-      </nav>
-    </header>
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </nav>
   )
 }

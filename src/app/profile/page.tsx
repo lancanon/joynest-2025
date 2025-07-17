@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import Navigation from '@/components/Navigation'
 import { supabase, Item, Profile } from '@/lib/supabase'
 import ItemCard from '@/components/ItemCard'
@@ -146,12 +145,12 @@ export default function ProfilePage() {
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-bold text-gray-900">Your Items</h2>
-            <Link
+            <a
               href="/items/new"
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               Add New Item
-            </Link>
+            </a>
           </div>
 
           {loading ? (
@@ -165,12 +164,12 @@ export default function ProfilePage() {
               <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No items yet</h3>
               <p className="text-gray-600 mb-4">Start selling by adding your first item!</p>
-              <Link
+              <a
                 href="/items/new"
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
               >
                 Add Your First Item
-              </Link>
+              </a>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

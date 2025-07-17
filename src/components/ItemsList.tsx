@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase, Item } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
@@ -11,30 +10,18 @@ import { Plus, ShoppingBag } from 'lucide-react'
 export default function ItemsList() {
   const [items, setItems] = useState<Item[]>([])
   const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState('')
   const { user } = useAuth()
-  const searchParams = useSearchParams()
 
   useEffect(() => {
-    const query = searchParams?.get('search') || ''
-    setSearchQuery(query)
-    fetchItems(query)
-  }, [searchParams])
+    fetchItems()
+  }, [])
 
-  const fetchItems = async (search?: string) => {
+  const fetchItems = async () => {
     try {
-      let query = supabase
+      const { data, error } = await supabase
         .from('items')
         .select('*')
         .order('created_at', { ascending: false })
-
-      // Add search functionality for title and description
-      if (search && search.trim()) {
-        const searchTerm = search.trim()
-        query = query.or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
-      }
-
-      const { data, error } = await query
 
       if (error) {
         console.error('Error fetching items:', error)
@@ -51,25 +38,23 @@ export default function ItemsList() {
 
   if (loading) {
     return (
-      <div className="flex justify-center w-full">
-        <div className="inline-flex flex-wrap justify-center gap-6 max-w-none">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="bg-white rounded-lg border border-gray-200 animate-pulse overflow-hidden" style={{ width: '250px', height: '300px' }}>
-              <div className="h-[150px] bg-gray-200"></div>
-              <div className="p-4">
-                <div className="h-5 bg-gray-200 rounded mb-2"></div>
-                <div className="space-y-2 mb-3">
-                  <div className="h-3 bg-gray-200 rounded w-full"></div>
-                  <div className="h-3 bg-gray-200 rounded w-3/4"></div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="h-4 bg-gray-200 rounded w-16"></div>
-                  <div className="h-3 bg-gray-200 rounded w-12"></div>
-                </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        {[...Array(10)].map((_, i) => (
+          <div key={i} className="bg-white rounded-lg border border-gray-200 animate-pulse overflow-hidden">
+            <div className="h-48 bg-gray-200"></div>
+            <div className="p-4">
+              <div className="h-5 bg-gray-200 rounded mb-2"></div>
+              <div className="space-y-2 mb-3">
+                <div className="h-3 bg-gray-200 rounded w-full"></div>
+                <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="h-4 bg-gray-200 rounded w-16"></div>
+                <div className="h-3 bg-gray-200 rounded w-12"></div>
               </div>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
     )
   }
@@ -110,22 +95,34 @@ export default function ItemsList() {
   return (
     <div>
       {/* Header */}
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-900">
-          {searchQuery ? `Search Results for "${searchQuery}"` : 'Latest Items'}
-        </h2>
-        <p className="text-gray-600 text-sm mt-1">
-          {items.length} item{items.length !== 1 ? 's' : ''} {searchQuery ? 'found' : 'available'}
-        </p>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900">Latest Items</h2>
+          <p className="text-gray-600 text-sm mt-1">{items.length} item{items.length !== 1 ? 's' : ''} available</p>
+        </div>
+        {user && (
+          <Link
+            href="/items/new"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            <Plus className="h-4 w-4" />
+            Add Item
+          </Link>
+        )}
       </div>
 
-      {/* Items Grid - Perfectly centered layout */}
-      <div className="flex justify-center w-full">
-        <div className="inline-flex flex-wrap justify-center gap-6 max-w-none">
-          {items.map((item) => (
-            <ItemCard key={item.id} item={item} />
-          ))}
-        </div>
+      {/* Items Grid - Similar to marketplace layout */}
+      <div 
+        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
+        style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', 
+          gap: '1rem' 
+        }}
+      >
+        {items.map((item) => (
+          <ItemCard key={item.id} item={item} />
+        ))}
       </div>
     </div>
   )

@@ -20,7 +20,6 @@ A modern e-commerce web application built with Next.js 15, TypeScript, and Supab
 - **Authentication**: Supabase Auth
 - **Icons**: Lucide React
 
-
 ## Getting Started
 
 ### Prerequisites
