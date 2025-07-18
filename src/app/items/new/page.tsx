@@ -11,6 +11,8 @@ export default function NewItemPage() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [price, setPrice] = useState('')
+  const [condition, setCondition] = useState('Mint')
+  const [category, setCategory] = useState('Kitchen')
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -71,6 +73,8 @@ export default function NewItemPage() {
             title: title.trim(),
             description: description.trim(),
             price: priceValue,
+            condition: condition,
+            category: category,
             image_url: imageUrl || null,
             user_id: user.id,
           },
@@ -97,104 +101,305 @@ export default function NewItemPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
       <Navigation />
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-lg shadow-sm border">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h1 className="text-2xl font-bold text-gray-900">Add New Item</h1>
-            <p className="mt-1 text-gray-600">
-              Share something amazing with the community
+      <div className="min-h-screen flex justify-center items-center pt-10 pb-20 px-5">
+        {/* Container for both text and form */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '60px',
+          maxWidth: '1200px'
+        }}>
+          {/* Left side - Header text */}
+          <div 
+            className="left-container"
+            style={{
+              maxWidth: '400px',
+              backgroundColor: 'rgba(255, 255, 255, 0)',
+              padding: '20px',
+              textAlign: 'left',
+              color: '#333'
+            }}
+          >
+            <h2 style={{
+              fontSize: '3.5em',
+              margin: '30px',
+              textShadow: '2px 2px 5px rgba(181, 178, 178, 0.5)'
+            }}>
+              Start Listing
+            </h2>
+            <p style={{ margin: '30px' }}>
+              Add details about condition, listed category,<br />
+              additional measurements, shipping policies, etc.
             </p>
           </div>
+        
+          {/* Right side - Form container */}
+          <div 
+            className="listing-section"
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              textAlign: 'left',
+              padding: '20px',
+              boxShadow: '0 4px 8px rgba(89, 74, 48, 0.4)',
+              borderRadius: '10px',
+              backgroundColor: '#333',
+              color: '#fff',
+              width: '480px'
+            }}
+          >
+        <h2 style={{ fontSize: '1.2em' }}>List New Item</h2>
+        
+        <form 
+          onSubmit={handleSubmit} 
+          style={{ maxWidth: '480px', width: '100%' }}
+        >
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md mb-4">
+              {error}
+            </div>
+          )}
           
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
-                {error}
-              </div>
-            )}
-            
-            <div>
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-                Title *
+          {/* First row - Item Name, Seller, Condition */}
+          <div 
+            className="form-row"
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              marginBottom: '12px'
+            }}
+          >
+            <div 
+              className="form-group"
+              style={{
+                flex: 1,
+                marginRight: '12px',
+                marginTop: '20px'
+              }}
+            >
+              <label style={{ display: 'block', marginBottom: '8px' }}>
+                Item Name:
               </label>
               <input
                 type="text"
-                id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter item title"
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  marginBottom: '10px',
+                  boxSizing: 'border-box'
+                }}
+                placeholder="Enter item name"
                 required
               />
             </div>
-
-            <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                Description *
+            <div 
+              className="form-group"
+              style={{
+                flex: 1,
+                marginRight: '12px',
+                marginTop: '20px'
+              }}
+            >
+              <label style={{ display: 'block', marginBottom: '8px' }}>
+                Seller:
               </label>
-              <textarea
-                id="description"
-                rows={4}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Describe your item in detail..."
-                required
+              <input
+                type="text"
+                value={user?.email || ''}
+                disabled
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  marginBottom: '10px',
+                  boxSizing: 'border-box',
+                  backgroundColor: '#f0f0f0',
+                  color: '#666'
+                }}
               />
             </div>
+            <div 
+              className="form-group"
+              style={{
+                flex: 1,
+                marginRight: '0',
+                marginTop: '20px'
+              }}
+            >
+              <label style={{ display: 'block', marginBottom: '8px' }}>
+                Condition:
+              </label>
+              <select 
+                value={condition}
+                onChange={(e) => setCondition(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  marginBottom: '10px',
+                  boxSizing: 'border-box'
+                }}
+              >
+                <option value="Mint">Mint</option>
+                <option value="Excellent">Excellent</option>
+                <option value="Good">Good</option>
+                <option value="Fair">Fair</option>
+                <option value="Poor">Poor</option>
+              </select>
+            </div>
+          </div>
 
-            <div>
-              <label htmlFor="price" className="block text-sm font-medium text-gray-700">
-                Price ($) *
+          {/* Second row - Department/Category and Price */}
+          <div 
+            className="form-row"
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              marginBottom: '12px'
+            }}
+          >
+            <div 
+              className="form-group"
+              style={{
+                flex: 1,
+                marginRight: '12px',
+                marginTop: '20px'
+              }}
+            >
+              <label style={{ display: 'block', marginBottom: '8px' }}>
+                Department/Category:
+              </label>
+              <select 
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  marginBottom: '10px',
+                  boxSizing: 'border-box'
+                }}
+              >
+                <option value="Kitchen">Kitchen</option>
+                <option value="Living Room">Living Room</option>
+                <option value="Bedroom">Bedroom</option>
+                <option value="Bathroom">Bathroom</option>
+                <option value="Office">Office</option>
+                <option value="Outdoor">Outdoor</option>
+                <option value="Electronics">Electronics</option>
+                <option value="Clothing">Clothing</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div 
+              className="form-group"
+              style={{
+                flex: 1,
+                marginRight: '0',
+                marginTop: '20px'
+              }}
+            >
+              <label style={{ display: 'block', marginBottom: '8px' }}>
+                Price:
               </label>
               <input
                 type="number"
-                id="price"
                 step="0.01"
                 min="0"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="0.00"
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  marginBottom: '10px',
+                  boxSizing: 'border-box'
+                }}
+                placeholder="$0.00"
                 required
               />
             </div>
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Item Image
-              </label>
-              <ImageUpload
-                value={imageUrl}
-                onChange={setImageUrl}
-                disabled={loading}
-              />
-              <p className="mt-1 text-xs text-gray-500">
-                Upload an image of your item (optional, max 5MB)
-              </p>
-            </div>
+          {/* Description */}
+          <div 
+            className="form-group"
+            style={{
+              flex: 1,
+              marginRight: '0',
+              marginTop: '20px'
+            }}
+          >
+            <label style={{ display: 'block', marginBottom: '8px' }}>
+              Description:
+            </label>
+            <textarea
+              rows={4}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px',
+                marginBottom: '10px',
+                boxSizing: 'border-box'
+              }}
+              placeholder="Describe your item in detail..."
+              required
+            />
+          </div>
 
-            <div className="flex gap-4 pt-6">
-              <button
-                type="button"
-                onClick={() => router.back()}
-                className="flex-1 py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Creating...' : 'Create Item'}
-              </button>
-            </div>
-          </form>
+          {/* Image Upload */}
+          <div 
+            className="form-group"
+            style={{
+              flex: 1,
+              marginRight: '0',
+              marginTop: '20px'
+            }}
+          >
+            <label style={{ display: 'block', marginBottom: '8px' }}>
+              Image:
+            </label>
+            <ImageUpload
+              value={imageUrl}
+              onChange={setImageUrl}
+              disabled={loading}
+            />
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              padding: '13px',
+              backgroundColor: loading ? '#ccc' : '#4CAF50',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              transition: 'background-color 0.3s ease',
+              width: '100%',
+              marginTop: '20px'
+            }}
+            onMouseOver={(e) => {
+              if (!loading) {
+                e.currentTarget.style.backgroundColor = '#45a049';
+              }
+            }}
+            onMouseOut={(e) => {
+              if (!loading) {
+                e.currentTarget.style.backgroundColor = '#4CAF50';
+              }
+            }}
+          >
+            {loading ? 'Publishing...' : 'Publish'}
+          </button>
+        </form>
+      </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }

@@ -59,8 +59,9 @@ export default function Navigation() {
                 width={32}
                 height={32}
                 className="object-contain"
+                style={{ marginBottom: '12px' }}
               />
-              <span style={{ fontSize: '1.4em', fontWeight: '500', color: 'white', marginTop: '12px' }}>Joynest</span>
+              <span style={{ fontSize: '1.4em', fontWeight: '500', color: 'white' }}>Joynest</span>
             </Link>
           </div>
 

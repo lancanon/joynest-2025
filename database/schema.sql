@@ -4,6 +4,8 @@ CREATE TABLE IF NOT EXISTS items (
   title VARCHAR(255) NOT NULL,
   description TEXT NOT NULL,
   price DECIMAL(10,2) NOT NULL CHECK (price > 0),
+  condition VARCHAR(50) DEFAULT 'Good' CHECK (condition IN ('Mint', 'Excellent', 'Good', 'Fair', 'Poor')),
+  category VARCHAR(100) DEFAULT 'Other' CHECK (category IN ('Kitchen', 'Living Room', 'Bedroom', 'Bathroom', 'Office', 'Outdoor', 'Electronics', 'Clothing', 'Other')),
   image_url TEXT,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
