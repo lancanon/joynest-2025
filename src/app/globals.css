@@ -159,6 +159,20 @@ body, h1, h2, p, ul, li {
   align-items: center;
 }
 
+/* Compact image upload for forms */
+.compact-image-upload .relative.w-full.h-48 {
+  height: 100px !important;
+}
+
+.compact-image-upload .relative.border-2.border-dashed {
+  padding: 20px !important;
+}
+
+.compact-image-upload .mx-auto.h-12.w-12 {
+  height: 32px !important;
+  width: 32px !important;
+}
+
 /* Buttons */
 .custom-button {
   padding: 10px 20px;

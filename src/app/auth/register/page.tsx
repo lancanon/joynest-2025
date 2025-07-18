@@ -72,42 +72,84 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
       <Navigation />
-      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
-          <div>
-            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-              Create your account
+      <div className="min-h-screen flex justify-center items-center pt-10 pb-20 px-5">
+        {/* Container for both text and form */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '60px',
+          maxWidth: '1200px'
+        }}>
+          {/* Left side - Header text */}
+          <div 
+            className="left-container"
+            style={{
+              maxWidth: '400px',
+              backgroundColor: 'rgba(255, 255, 255, 0)',
+              padding: '20px',
+              textAlign: 'left',
+              color: '#333'
+            }}
+          >
+            <h2 style={{
+              fontSize: '3.5em',
+              margin: '30px',
+              textShadow: '2px 2px 5px rgba(181, 178, 178, 0.5)'
+            }}>
+              Join Joynest
             </h2>
-            <p className="mt-2 text-center text-sm text-gray-600">
-              Or{' '}
-              <Link
-                href="/auth/login"
-                className="font-medium text-blue-600 hover:text-blue-500"
-              >
-                sign in to your existing account
-              </Link>
+            <p style={{ margin: '30px' }}>
+              Create your account and start selling<br />
+              your items in our vibrant marketplace.
             </p>
           </div>
-          
-          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
-                {error}
-              </div>
-            )}
+        
+          {/* Right side - Form container */}
+          <div 
+            className="auth-section"
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              textAlign: 'left',
+              padding: '20px',
+              boxShadow: '0 4px 8px rgba(89, 74, 48, 0.4)',
+              borderRadius: '10px',
+              backgroundColor: '#333',
+              color: '#fff',
+              width: '420px',
+              maxHeight: '600px',
+              overflow: 'auto'
+            }}
+          >
+            <h2 style={{ fontSize: '1.2em', marginBottom: '20px' }}>Create Account</h2>
             
-            {success && (
-              <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-md">
-                Account created successfully! Check your email to verify your account.
-              </div>
-            )}
-            
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                  Email address
+            <form 
+              onSubmit={handleSubmit} 
+              style={{ maxWidth: '420px', width: '100%' }}
+            >
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md mb-4">
+                  {error}
+                </div>
+              )}
+              
+              {success && (
+                <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-md mb-4">
+                  Account created successfully! Check your email to verify your account.
+                </div>
+              )}
+              
+              <div 
+                className="form-group"
+                style={{
+                  marginBottom: '20px'
+                }}
+              >
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px' }}>
+                  Email Address:
                 </label>
                 <input
                   id="email"
@@ -117,14 +159,26 @@ export default function RegisterPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '10px',
+                    boxSizing: 'border-box',
+                    borderRadius: '5px',
+                    border: '1px solid #ccc'
+                  }}
                   placeholder="Enter your email"
                 />
               </div>
 
-              <div>
-                <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                  Username
+              <div 
+                className="form-group"
+                style={{
+                  marginBottom: '20px'
+                }}
+              >
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px' }}>
+                  Username:
                 </label>
                 <input
                   id="username"
@@ -134,19 +188,31 @@ export default function RegisterPage() {
                   required
                   value={username}
                   onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-zA-Z0-9_]/g, ''))}
-                  className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '5px',
+                    boxSizing: 'border-box',
+                    borderRadius: '5px',
+                    border: '1px solid #ccc'
+                  }}
                   placeholder="Choose a username"
                 />
-                <p className="mt-1 text-xs text-gray-500">
+                <p style={{ fontSize: '12px', color: '#ccc', margin: '5px 0' }}>
                   3+ characters, letters, numbers, and underscores only
                 </p>
               </div>
               
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                  Password
+              <div 
+                className="form-group"
+                style={{
+                  marginBottom: '20px'
+                }}
+              >
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px' }}>
+                  Password:
                 </label>
-                <div className="mt-1 relative">
+                <div style={{ position: 'relative' }}>
                   <input
                     id="password"
                     name="password"
@@ -155,31 +221,53 @@ export default function RegisterPage() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="appearance-none relative block w-full px-3 py-2 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      paddingRight: '40px',
+                      marginBottom: '5px',
+                      boxSizing: 'border-box',
+                      borderRadius: '5px',
+                      border: '1px solid #ccc'
+                    }}
                     placeholder="Enter your password"
                   />
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
                     onClick={() => setShowPassword(!showPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: '10px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: '#666'
+                    }}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-gray-400" />
+                      <EyeOff className="h-4 w-4" />
                     ) : (
-                      <Eye className="h-4 w-4 text-gray-400" />
+                      <Eye className="h-4 w-4" />
                     )}
                   </button>
                 </div>
-                <p className="mt-1 text-xs text-gray-500">
+                <p style={{ fontSize: '12px', color: '#ccc', margin: '5px 0' }}>
                   Must be at least 6 characters long
                 </p>
               </div>
               
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                  Confirm Password
+              <div 
+                className="form-group"
+                style={{
+                  marginBottom: '20px'
+                }}
+              >
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px' }}>
+                  Confirm Password:
                 </label>
-                <div className="mt-1 relative">
+                <div style={{ position: 'relative' }}>
                   <input
                     id="confirmPassword"
                     name="confirmPassword"
@@ -188,36 +276,94 @@ export default function RegisterPage() {
                     required
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="appearance-none relative block w-full px-3 py-2 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      paddingRight: '40px',
+                      marginBottom: '10px',
+                      boxSizing: 'border-box',
+                      borderRadius: '5px',
+                      border: '1px solid #ccc'
+                    }}
                     placeholder="Confirm your password"
                   />
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: '10px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: '#666'
+                    }}
                   >
                     {showConfirmPassword ? (
-                      <EyeOff className="h-4 w-4 text-gray-400" />
+                      <EyeOff className="h-4 w-4" />
                     ) : (
-                      <Eye className="h-4 w-4 text-gray-400" />
+                      <Eye className="h-4 w-4" />
                     )}
                   </button>
                 </div>
               </div>
-            </div>
 
-            <div>
               <button
                 type="submit"
                 disabled={loading}
-                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  padding: '13px',
+                  backgroundColor: loading ? '#ccc' : '#4CAF50',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  transition: 'background-color 0.3s ease',
+                  width: '100%',
+                  marginTop: '10px',
+                  fontSize: '16px',
+                  fontWeight: '500'
+                }}
+                onMouseOver={(e) => {
+                  if (!loading) {
+                    e.currentTarget.style.backgroundColor = '#45a049';
+                  }
+                }}
+                onMouseOut={(e) => {
+                  if (!loading) {
+                    e.currentTarget.style.backgroundColor = '#4CAF50';
+                  }
+                }}
               >
-                {loading ? 'Creating account...' : 'Create account'}
+                {loading ? 'Creating account...' : 'Create Account'}
               </button>
-            </div>
-          </form>
+              
+              <div style={{ 
+                textAlign: 'center', 
+                marginTop: '20px', 
+                paddingTop: '15px', 
+                borderTop: '1px solid #555' 
+              }}>
+                <p style={{ fontSize: '14px', color: '#ccc' }}>
+                  Already have an account?{' '}
+                  <Link
+                    href="/auth/login"
+                    style={{ 
+                      color: '#4CAF50', 
+                      textDecoration: 'none',
+                      fontWeight: '500'
+                    }}
+                  >
+                    Sign in here
+                  </Link>
+                </p>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }

@@ -6,7 +6,6 @@ export default function Home() {
     <div className="min-h-screen">
       <Navigation />
       
-      {/* Hero Section with Background Image */}
       <div className="index-section">
         <div className="background-image"></div>
         <div className="introduction-banner">

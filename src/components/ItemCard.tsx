@@ -1,10 +1,10 @@
 'use client'
 
-import Link from 'next/link'
 import Image from 'next/image'
-import { Item } from '@/lib/supabase'
+import { Item, supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { DollarSign, ImageIcon, Star } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
 interface ItemCardProps {
   item: Item
@@ -13,59 +13,169 @@ interface ItemCardProps {
 export default function ItemCard({ item }: ItemCardProps) {
   const { user } = useAuth()
   const isOwner = user?.id === item.user_id
+  const [offersCount, setOffersCount] = useState(0)
+
+  useEffect(() => {
+    // Reset offers count when user changes
+    setOffersCount(0)
+    fetchOffersCount()
+  }, [item.id, user?.id]) // Add user?.id to refresh when user changes
+
+  const fetchOffersCount = async () => {
+    try {
+      // Try to use the public view first (more efficient)
+      const { data: stats, error: statsError } = await supabase
+        .from('public_offer_stats')
+        .select('total_offers')
+        .eq('item_id', item.id)
+        .single()
+
+      if (!statsError && stats) {
+        setOffersCount(stats.total_offers || 0)
+        return
+      }
+
+      // Fallback to direct query
+      const { count, error } = await supabase
+        .from('offers')
+        .select('*', { count: 'exact', head: true })
+        .eq('item_id', item.id)
+
+      if (error) {
+        console.error('Error fetching offers count:', error)
+        setOffersCount(0)
+        return
+      }
+
+      setOffersCount(count || 0)
+    } catch (error) {
+      console.error('Error:', error)
+      setOffersCount(0)
+    }
+  }
 
   return (
-    <Link href={`/items/${item.id}`} className="block">
-      <div className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 h-80 flex flex-col justify-between cursor-pointer">
-        {/* Image Container */}
-        <div className="relative h-40 overflow-hidden rounded">
-          {item.image_url ? (
-            <Image
-              src={item.image_url}
-              alt={item.title}
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-            />
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full text-gray-400 bg-gray-50 rounded">
-              <ImageIcon className="h-12 w-12 mb-2" />
-              <span className="text-sm">No Image</span>
+    <div 
+      onClick={() => window.location.href = `/items/${item.id}`}
+      className="item-card cursor-pointer"
+      style={{
+        transition: 'all 0.3s ease',
+        transform: 'translateY(0)',
+        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+        borderRadius: '12px',
+        overflow: 'hidden',
+        backgroundColor: 'white',
+        border: '1px solid #e5e7eb',
+        width: '300px',
+        minHeight: '360px',
+        margin: '0 auto',
+        display: 'flex',
+        flexDirection: 'column'
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'translateY(-4px)'
+        e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)'
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'translateY(0)'
+        e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)'
+      }}
+    >
+      {/* Image Container */}
+      <div className="relative" style={{ flex: '0 0 auto' }}>
+        {item.image_url ? (
+          <Image
+            src={item.image_url}
+            alt={item.title}
+            width={300}
+            height={200}
+            className="object-cover"
+            style={{ width: '100%', height: '200px', borderRadius: '0' }}
+          />
+        ) : (
+          <div className="flex flex-col items-center justify-center text-gray-400 bg-gray-50" style={{ height: '200px' }}>
+            <ImageIcon className="h-16 w-16 mb-2" />
+            <span className="text-sm">No Image</span>
+          </div>
+        )}
+        
+        {/* Owner Badge */}
+        {isOwner && (
+          <div className="absolute top-3 right-3">
+            <div className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+              <Star className="h-3 w-3" />
+              Your Item
             </div>
-          )}
-          
-          {/* Owner Badge */}
-          {isOwner && (
-            <div className="absolute top-2 right-2">
-              <div className="bg-blue-500 text-white px-2 py-1 rounded text-xs font-medium flex items-center gap-1">
-                <Star className="h-3 w-3" />
-                Your Item
-              </div>
-            </div>
-          )}
+          </div>
+        )}
+      </div>
+      
+      {/* Content Container */}
+      <div style={{ padding: '18px', flex: '1 1 auto', display: 'flex', flexDirection: 'column' }}>
+        {/* Title */}
+        <h3 style={{ 
+          margin: '0 0 10px 0', 
+          fontSize: '17px', 
+          fontWeight: '600',
+          color: '#1f2937',
+          lineHeight: '1.3',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap'
+        }}>
+          {item.title}
+        </h3>
+        
+        {/* Separator */}
+        <div style={{ 
+          width: '100%', 
+          height: '1px', 
+          backgroundColor: '#e5e7eb', 
+          margin: '10px 0' 
+        }}></div>
+        
+        {/* Condition and Category */}
+        <div style={{ 
+          fontSize: '13px', 
+          color: '#6b7280', 
+          marginBottom: '14px',
+          fontWeight: '500',
+          lineHeight: '1.4',
+          flex: '1 1 auto'
+        }}>
+          <div>Condition: {item.condition || 'Good'}</div>
+          <div>Category: {item.category || 'General'}</div>
         </div>
         
-        {/* Content */}
-        <div className="flex-1 flex flex-col justify-between mt-3">
-          <div>
-            <h3 className="font-semibold text-gray-900 text-lg mb-2 line-clamp-2">
-              {item.title}
-            </h3>
-            
-            <p className="text-sm text-gray-600 line-clamp-2 mb-3">
-              {item.description}
-            </p>
+        {/* Price and Offers */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          marginTop: 'auto',
+          minHeight: '24px',
+          flex: '0 0 auto'
+        }}>
+          <div style={{ 
+            fontSize: '19px', 
+            fontWeight: '700',
+            color: '#059669',
+            display: 'flex',
+            alignItems: 'center'
+          }}>
+            <DollarSign className="h-4 w-4" style={{ marginRight: '1px' }} />
+            {item.price.toFixed(2)}
           </div>
-          
-          {/* Price */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center text-gray-900 font-semibold text-lg">
-              <DollarSign className="h-4 w-4" />
-              <span>{item.price.toFixed(2)}</span>
-            </div>
+          <div style={{ 
+            fontSize: '12px', 
+            color: '#6b7280',
+            fontWeight: '500',
+            textAlign: 'right'
+          }}>
+            Total Offers: {offersCount}
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   )
 }

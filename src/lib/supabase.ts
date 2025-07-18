@@ -21,6 +21,8 @@ export interface Item {
   title: string
   description: string
   price: number
+  condition?: string
+  category?: string
   image_url?: string
   user_id: string
   created_at: string

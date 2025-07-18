@@ -4,11 +4,14 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useAuth } from '@/contexts/AuthContext'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase, Profile } from '@/lib/supabase'
 
 export default function Navigation() {
   const { user, signOut } = useAuth()
   const [profile, setProfile] = useState<Profile | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const router = useRouter()
 
   useEffect(() => {
     if (user) {
@@ -42,15 +45,23 @@ export default function Navigation() {
     }
   }
 
-  const handleSignOut = () => {
-    signOut()
+  const handleSignOut = async () => {
+    await signOut()
+    router.push('/')
+  }
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      // Navigate to browse page with search query
+      router.push(`/browse?search=${encodeURIComponent(searchQuery.trim())}`)
+    }
   }
 
   return (
     <nav style={{ backgroundColor: '#333333', height: '60px' }}>
       <div className="max-w-7xl mx-auto px-8 h-full">
         <div className="grid grid-cols-3 items-center h-full">
-          {/* Left side - Logo */}
           <div className="flex items-center justify-start" style={{ marginLeft: '20px' }}>
             <Link href="/" className="flex items-center text-white no-underline" style={{ textDecoration: 'none', gap: '12px' }}>
               <Image
@@ -67,10 +78,12 @@ export default function Navigation() {
 
           {/* Center - Search bar */}
           <div className="flex items-center justify-center">
-            <div className="flex">
+            <form onSubmit={handleSearch} className="flex">
               <input
                 type="text"
-                placeholder="Search"
+                placeholder="Search items..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 style={{
                   padding: '9px 14px',
                   borderRadius: '4px 0 0 4px',
@@ -95,7 +108,7 @@ export default function Navigation() {
               >
                 Search
               </button>
-            </div>
+            </form>
           </div>
 
           {/* Right side - Navigation */}

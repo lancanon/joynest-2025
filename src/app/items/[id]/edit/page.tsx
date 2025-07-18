@@ -15,6 +15,8 @@ export default function EditItemPage() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [price, setPrice] = useState('')
+  const [condition, setCondition] = useState('Good')
+  const [category, setCategory] = useState('Kitchen')
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -79,6 +81,8 @@ export default function EditItemPage() {
       setTitle(data.title)
       setDescription(data.description)
       setPrice(data.price.toString())
+      setCondition(data.condition || 'Good')
+      setCategory(data.category || 'Kitchen')
       setImageUrl(data.image_url || null)
     } catch (error) {
       console.error('Error:', error)
@@ -113,6 +117,8 @@ export default function EditItemPage() {
           title: title.trim(),
           description: description.trim(),
           price: priceValue,
+          condition: condition,
+          category: category,
           image_url: imageUrl || null,
         })
         .eq('id', itemId)
@@ -166,104 +172,309 @@ export default function EditItemPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
       <Navigation />
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-lg shadow-sm border">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h1 className="text-2xl font-bold text-gray-900">Edit Item</h1>
-            <p className="mt-1 text-gray-600">
-              Update your item details
+      <div className="min-h-screen flex justify-center items-center pt-10 pb-20 px-5">
+        {/* Container for both text and form */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '60px',
+          maxWidth: '1200px'
+        }}>
+          {/* Left side - Header text */}
+          <div 
+            className="left-container"
+            style={{
+              maxWidth: '400px',
+              backgroundColor: 'rgba(255, 255, 255, 0)',
+              padding: '20px',
+              textAlign: 'left',
+              color: '#333'
+            }}
+          >
+            <h2 style={{
+              fontSize: '3.5em',
+              margin: '30px',
+              textShadow: '2px 2px 5px rgba(181, 178, 178, 0.5)'
+            }}>
+              Update Listing
+            </h2>
+            <p style={{ margin: '30px' }}>
+              Modify your item details, update condition, category,<br />
+              pricing, and other information as needed.
             </p>
           </div>
-          
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
-                {error}
-              </div>
-            )}
+        
+          {/* Right side - Form container */}
+          <div 
+            className="listing-section"
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              textAlign: 'left',
+              padding: '20px',
+              boxShadow: '0 4px 8px rgba(89, 74, 48, 0.4)',
+              borderRadius: '10px',
+              backgroundColor: '#333',
+              color: '#fff',
+              width: '520px',
+              maxHeight: '600px',
+              overflowY: 'auto'
+            }}
+          >
+            <h2 style={{ fontSize: '1.2em' }}>Edit Item</h2>
             
-            <div>
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-                Title *
-              </label>
-              <input
-                type="text"
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter item title"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                Description *
-              </label>
-              <textarea
-                id="description"
-                rows={4}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Describe your item in detail..."
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="price" className="block text-sm font-medium text-gray-700">
-                Price ($) *
-              </label>
-              <input
-                type="number"
-                id="price"
-                step="0.01"
-                min="0"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="0.00"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Item Image
-              </label>
-              <ImageUpload
-                value={imageUrl}
-                onChange={setImageUrl}
-                disabled={saving}
-              />
-              <p className="mt-1 text-xs text-gray-500">
-                Upload an image of your item (optional, max 5MB)
-              </p>
-            </div>
-
-            <div className="flex gap-4 pt-6">
-              <button
-                type="button"
-                onClick={() => router.back()}
-                className="flex-1 py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            <form 
+              onSubmit={handleSubmit} 
+              style={{ maxWidth: '520px', width: '100%' }}
+            >
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md mb-4">
+                  {error}
+                </div>
+              )}
+              
+              {/* First row - Item Name, Seller, Condition */}
+              <div 
+                className="form-row"
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  marginBottom: '8px'
+                }}
               >
-                Cancel
-              </button>
+                <div 
+                  className="form-group"
+                  style={{
+                    flex: 1,
+                    marginRight: '12px',
+                    marginTop: '15px'
+                  }}
+                >
+                  <label style={{ display: 'block', marginBottom: '8px' }}>
+                    Item Name:
+                  </label>
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '8px',
+                      marginBottom: '10px',
+                      boxSizing: 'border-box'
+                    }}
+                    placeholder="Enter item name"
+                    required
+                  />
+                </div>
+                <div 
+                  className="form-group"
+                  style={{
+                    flex: 1,
+                    marginRight: '12px',
+                    marginTop: '20px'
+                  }}
+                >
+                  <label style={{ display: 'block', marginBottom: '8px' }}>
+                    Seller:
+                  </label>
+                  <input
+                    type="text"
+                    value={user?.email || ''}
+                    disabled
+                    style={{
+                      width: '100%',
+                      padding: '8px',
+                      marginBottom: '10px',
+                      boxSizing: 'border-box',
+                      backgroundColor: '#f0f0f0',
+                      color: '#666'
+                    }}
+                  />
+                </div>
+                <div 
+                  className="form-group"
+                  style={{
+                    flex: 1,
+                    marginRight: '0',
+                    marginTop: '20px'
+                  }}
+                >
+                  <label style={{ display: 'block', marginBottom: '8px' }}>
+                    Condition:
+                  </label>
+                  <select 
+                    value={condition}
+                    onChange={(e) => setCondition(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '8px',
+                      marginBottom: '10px',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    <option value="Mint">Mint</option>
+                    <option value="Excellent">Excellent</option>
+                    <option value="Good">Good</option>
+                    <option value="Fair">Fair</option>
+                    <option value="Poor">Poor</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Second row - Department/Category and Price */}
+              <div 
+                className="form-row"
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  marginBottom: '8px'
+                }}
+              >
+                <div 
+                  className="form-group"
+                  style={{
+                    flex: 1,
+                    marginRight: '12px',
+                    marginTop: '20px'
+                  }}
+                >
+                  <label style={{ display: 'block', marginBottom: '8px' }}>
+                    Department/Category:
+                  </label>
+                  <select 
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '8px',
+                      marginBottom: '10px',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    <option value="Kitchen">Kitchen</option>
+                    <option value="Living Room">Living Room</option>
+                    <option value="Bedroom">Bedroom</option>
+                    <option value="Bathroom">Bathroom</option>
+                    <option value="Office">Office</option>
+                    <option value="Outdoor">Outdoor</option>
+                    <option value="Electronics">Electronics</option>
+                    <option value="Clothing">Clothing</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div 
+                  className="form-group"
+                  style={{
+                    flex: 1,
+                    marginRight: '0',
+                    marginTop: '20px'
+                  }}
+                >
+                  <label style={{ display: 'block', marginBottom: '8px' }}>
+                    Price:
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '8px',
+                      marginBottom: '10px',
+                      boxSizing: 'border-box'
+                    }}
+                    placeholder="$0.00"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Description */}
+              <div 
+                className="form-group"
+                style={{
+                  flex: 1,
+                  marginRight: '0',
+                  marginTop: '15px'
+                }}
+              >
+                <label style={{ display: 'block', marginBottom: '8px' }}>
+                  Description:
+                </label>
+                <textarea
+                  rows={4}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    marginBottom: '10px',
+                    boxSizing: 'border-box'
+                  }}
+                  placeholder="Describe your item in detail..."
+                  required
+                />
+              </div>
+
+              {/* Image Upload */}
+              <div 
+                className="form-group"
+                style={{
+                  flex: 1,
+                  marginRight: '0',
+                  marginTop: '15px'
+                }}
+              >
+                <label style={{ display: 'block', marginBottom: '8px' }}>
+                  Image:
+                </label>
+                <div className="compact-image-upload">
+                  <ImageUpload
+                    value={imageUrl}
+                    onChange={setImageUrl}
+                    disabled={saving}
+                  />
+                </div>
+              </div>
+
+              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={saving}
-                className="flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  padding: '13px',
+                  backgroundColor: saving ? '#ccc' : '#4CAF50',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: saving ? 'not-allowed' : 'pointer',
+                  transition: 'background-color 0.3s ease',
+                  width: '100%',
+                  marginTop: '15px'
+                }}
+                onMouseOver={(e) => {
+                  if (!saving) {
+                    e.currentTarget.style.backgroundColor = '#45a049';
+                  }
+                }}
+                onMouseOut={(e) => {
+                  if (!saving) {
+                    e.currentTarget.style.backgroundColor = '#4CAF50';
+                  }
+                }}
               >
-                {saving ? 'Saving...' : 'Save Changes'}
+                {saving ? 'Updating...' : 'Update Item'}
               </button>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
