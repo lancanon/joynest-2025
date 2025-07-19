@@ -8,7 +8,12 @@ import { useAuth } from '@/contexts/AuthContext'
 import ItemCard from '@/components/ItemCard'
 import { Plus, ShoppingBag, Search } from 'lucide-react'
 
-export default function ItemsList() {
+interface ItemsListProps {
+  selectedConditions?: string[]
+  selectedCategories?: string[]
+}
+
+export default function ItemsList({ selectedConditions = [], selectedCategories = [] }: ItemsListProps) {
   const [items, setItems] = useState<Item[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -20,7 +25,7 @@ export default function ItemsList() {
     const query = searchParams.get('search') || ''
     setSearchQuery(query)
     fetchItems(query)
-  }, [user?.id, searchParams])
+  }, [user?.id, searchParams, selectedConditions, selectedCategories])
 
   const fetchItems = async (query?: string) => {
     try {
@@ -43,7 +48,23 @@ export default function ItemsList() {
         return
       }
 
-      setItems(data || [])
+      let filteredData = data || []
+
+      // Apply condition filters
+      if (selectedConditions.length > 0) {
+        filteredData = filteredData.filter(item => 
+          selectedConditions.includes(item.condition?.toLowerCase() || '')
+        )
+      }
+
+      // Apply category filters
+      if (selectedCategories.length > 0) {
+        filteredData = filteredData.filter(item => 
+          selectedCategories.includes(item.category?.toLowerCase() || '')
+        )
+      }
+
+      setItems(filteredData)
     } catch (error) {
       console.error('Error:', error)
     } finally {
