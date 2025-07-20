@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import Navigation from '@/components/Navigation'
-import { supabase, Item, Offer, Profile } from '@/lib/supabase'
+import { supabase, Item, Offer, Profile, getDisplayName } from '@/lib/supabase'
 import { DollarSign, Edit, Trash2, Clock, CheckCircle, XCircle, Eye, ShoppingCart, MessageSquare } from 'lucide-react'
 import Image from 'next/image'
 
@@ -130,8 +130,19 @@ export default function ItemPage() {
       setItem(data)
       
       if (data.user_id) {
-        const { data: profileData } = await supabase.from('profiles').select('*').eq('id', data.user_id).single()
-        if (profileData) setSeller(profileData)
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user_id)
+          .single()
+        
+        if (profileError) {
+          console.log('Profile not found for user:', data.user_id, profileError)
+          // If no profile exists, we'll show "Unknown User" via getDisplayName
+          setSeller(null)
+        } else {
+          setSeller(profileData)
+        }
       }
     } catch (error) {
       console.error('Error:', error)
@@ -221,7 +232,7 @@ export default function ItemPage() {
 
   // Memoize computed values
   const pendingOffers = useMemo(() => offers.filter(offer => offer.status === 'pending'), [offers])
-  const sellerName = useMemo(() => seller?.username || seller?.full_name || 'Unknown Seller', [seller])
+  const sellerName = useMemo(() => getDisplayName(seller), [seller])
 
   // Early returns for loading and error states
   if (loading) {

@@ -98,16 +98,6 @@ export default function ItemCard({ item }: ItemCardProps) {
             <span className="text-sm">No Image</span>
           </div>
         )}
-        
-        {/* Owner Badge */}
-        {isOwner && (
-          <div className="absolute top-3 right-3">
-            <div className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
-              <Star className="h-3 w-3" />
-              Your Item
-            </div>
-          </div>
-        )}
       </div>
       
       {/* Content Container */}

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import Navigation from '@/components/Navigation'
-import { supabase, Item, Profile, Offer } from '@/lib/supabase'
+import { supabase, Item, Profile, Offer, getDisplayName } from '@/lib/supabase'
 import ItemCard from '@/components/ItemCard'
 import { User, Package, DollarSign, Clock, CheckCircle, XCircle, Plus, ShoppingBag, TrendingUp, Handshake, Star } from 'lucide-react'
 

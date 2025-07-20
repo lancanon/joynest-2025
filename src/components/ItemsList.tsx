@@ -73,37 +73,7 @@ export default function ItemsList({ selectedConditions = [], selectedCategories 
   }
 
   if (loading) {
-    return (
-      <div className="flex justify-center">
-        <div 
-          className="grid gap-4 max-w-7xl w-full px-4"
-          style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '1rem',
-            justifyItems: 'center'
-          }}
-        >
-          {[...Array(8)].map((_, i) => (
-            <div key={i} className="bg-white rounded-lg border border-gray-200 animate-pulse overflow-hidden" style={{ width: '300px', minHeight: '360px' }}>
-              <div className="h-48 bg-gray-200"></div>
-              <div className="p-4" style={{ display: 'flex', flexDirection: 'column', height: '160px' }}>
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-px bg-gray-200 my-2"></div>
-                <div className="space-y-2 mb-3 flex-1">
-                  <div className="h-3 bg-gray-200 rounded w-full"></div>
-                  <div className="h-3 bg-gray-200 rounded w-3/4"></div>
-                </div>
-                <div className="flex items-center justify-between mt-auto">
-                  <div className="h-4 bg-gray-200 rounded w-16"></div>
-                  <div className="h-3 bg-gray-200 rounded w-20"></div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    )
+    return null
   }
 
   if (items.length === 0) {
@@ -163,7 +133,7 @@ export default function ItemsList({ selectedConditions = [], selectedCategories 
             <>
               <h2 className="text-2xl font-bold text-gray-900 flex items-center justify-center gap-2">
                 <Search className="h-6 w-6" />
-                Search Results for "{searchQuery}"
+                Showing Results for "{searchQuery}"
               </h2>
               <p className="text-gray-600 text-sm mt-2">
                 {items.length} item{items.length !== 1 ? 's' : ''} found
@@ -171,21 +141,20 @@ export default function ItemsList({ selectedConditions = [], selectedCategories 
             </>
           ) : (
             <>
-              <h2 className="text-2xl font-bold text-gray-900">More to explore</h2>
             </>
           )}
         </div>
       </div>
 
-      {/* Items Grid - Centered and Modern */}
-      <div className="flex justify-center">
+      {/* Items Grid - 4x4 Layout */}
+      <div className="flex justify-center" style={{marginTop: '60px'}}>
         <div 
-          className="grid gap-4 max-w-7xl w-full px-4"
+          className="grid gap-6 max-w-7xl w-full px-4"
           style={{ 
             display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '1rem',
-            justifyItems: 'center'
+            gridTemplateColumns: 'repeat(4, 300px)',
+            gap: '1.5rem',
+            justifyContent: 'center'
           }}
         >
           {items.map((item) => (

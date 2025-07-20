@@ -106,7 +106,7 @@ export default function ImageUpload({
 
       {value ? (
         <div className="relative">
-          <div className="relative w-full h-48 bg-gray-100 rounded-lg overflow-hidden">
+          <div className="relative w-full h-24 bg-gray-100 rounded-lg overflow-hidden">
             <img
               src={value}
               alt="Uploaded image"
@@ -116,10 +116,10 @@ export default function ImageUpload({
               <button
                 type="button"
                 onClick={handleRemove}
-                className="absolute top-2 right-2 p-1 bg-white rounded-full shadow-sm hover:bg-gray-50 transition-colors"
+                className="absolute top-1 right-1 p-1 bg-white rounded-full shadow-sm hover:bg-gray-50 transition-colors"
                 title="Remove image"
               >
-                <X className="h-4 w-4 text-gray-600" />
+                <X className="h-3 w-3 text-gray-600" />
               </button>
             )}
           </div>
@@ -128,7 +128,7 @@ export default function ImageUpload({
               type="button"
               onClick={openFileDialog}
               disabled={uploading}
-              className="mt-2 w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="mt-2 w-full py-1 px-2 border border-gray-300 rounded-md shadow-sm text-xs font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {uploading ? 'Uploading...' : 'Change Image'}
             </button>
@@ -136,7 +136,7 @@ export default function ImageUpload({
         </div>
       ) : (
         <div
-          className={`relative border-2 border-dashed rounded-lg p-6 transition-colors ${
+          className={`relative border-2 border-dashed rounded-lg p-3 transition-colors ${
             dragOver
               ? 'border-blue-400 bg-blue-50'
               : 'border-gray-300 hover:border-gray-400'
@@ -147,9 +147,9 @@ export default function ImageUpload({
           onClick={openFileDialog}
         >
           <div className="text-center">
-            <ImageIcon className="mx-auto h-12 w-12 text-gray-400" />
-            <div className="mt-4">
-              <p className="text-sm text-gray-600">
+            <ImageIcon className="mx-auto h-8 w-8 text-gray-400" />
+            <div className="mt-2">
+              <p className="text-xs text-gray-600">
                 {uploading ? (
                   'Uploading...'
                 ) : (
@@ -168,8 +168,8 @@ export default function ImageUpload({
           {uploading && (
             <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center rounded-lg">
               <div className="flex items-center space-x-2">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                <span className="text-sm text-gray-600">Uploading...</span>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                <span className="text-xs text-gray-600">Uploading...</span>
               </div>
             </div>
           )}

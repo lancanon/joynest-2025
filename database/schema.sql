@@ -1,3 +1,7 @@
+-- ===== JOYNEST E-COMMERCE DATABASE SCHEMA =====
+-- Next.js 15 + Supabase + TypeScript E-commerce Application
+-- Features: Item listings, offers, user profiles with display names
+
 -- Create the items table
 CREATE TABLE IF NOT EXISTS items (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -13,9 +17,12 @@ CREATE TABLE IF NOT EXISTS items (
 );
 
 -- Create the profiles table for user data
+-- display_name is what appears to other users (can be customized)
+-- username is for login/identification (unique)
 CREATE TABLE IF NOT EXISTS profiles (
   id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
   username VARCHAR(50) UNIQUE NOT NULL,
+  display_name VARCHAR(100), -- What other users see (can be customized)
   full_name TEXT,
   avatar_url TEXT,
   bio TEXT,
@@ -168,13 +175,15 @@ CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON profiles
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Function to handle new user registration (creates profile automatically)
+-- This ensures every new user gets a profile with display_name set to their username
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, username, full_name)
+  INSERT INTO public.profiles (id, username, display_name, full_name)
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'username', SPLIT_PART(NEW.email, '@', 1)),
+    COALESCE(NEW.raw_user_meta_data->>'username', SPLIT_PART(NEW.email, '@', 1)), -- display_name defaults to username
     COALESCE(NEW.raw_user_meta_data->>'full_name', '')
   );
   RETURN NEW;
@@ -186,66 +195,48 @@ CREATE OR REPLACE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION handle_new_user();
 
--- ===== TESTING HELPERS =====
--- Function to create test users easily (for development/testing only)
-CREATE OR REPLACE FUNCTION create_test_user(
-  test_email TEXT,
-  test_password TEXT DEFAULT 'password123',
-  test_username TEXT DEFAULT NULL
-)
-RETURNS UUID AS $$
-DECLARE
-  new_user_id UUID;
-  username_to_use TEXT;
-BEGIN
-  -- Generate username if not provided
-  username_to_use := COALESCE(test_username, SPLIT_PART(test_email, '@', 1));
-  
-  -- This is a simplified test function
-  -- In production, use proper Supabase Auth registration
-  INSERT INTO auth.users (
-    id,
-    email,
-    encrypted_password,
-    email_confirmed_at,
-    created_at,
-    updated_at,
-    confirmation_token,
-    email_confirm_status
-  ) VALUES (
-    gen_random_uuid(),
-    test_email,
-    crypt(test_password, gen_salt('bf')),
-    NOW(),
-    NOW(),
-    NOW(),
-    '',
-    1
-  ) RETURNING id INTO new_user_id;
-  
-  -- Create profile with username
-  INSERT INTO profiles (id, username, full_name) VALUES (
-    new_user_id,
-    username_to_use,
-    INITCAP(REPLACE(username_to_use, '_', ' '))
-  );
-  
-  RETURN new_user_id;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+-- ===== DATA MIGRATION AND FIXES =====
+-- Fix any existing users who might not have profiles
 
+-- Create missing profiles for users who have items but no profile
+INSERT INTO profiles (id, username, display_name, created_at, updated_at)
+SELECT DISTINCT 
+  i.user_id,
+  COALESCE(
+    (au.raw_user_meta_data->>'username')::text,
+    au.email,
+    'user_' || SUBSTRING(i.user_id::text, 1, 8)
+  ) as username,
+  COALESCE(
+    (au.raw_user_meta_data->>'username')::text,
+    au.email,
+    'User ' || SUBSTRING(i.user_id::text, 1, 8)
+  ) as display_name,
+  NOW() as created_at,
+  NOW() as updated_at
+FROM items i
+LEFT JOIN profiles p ON i.user_id = p.id
+LEFT JOIN auth.users au ON i.user_id = au.id
+WHERE p.id IS NULL
+ON CONFLICT (id) DO NOTHING;
 
-
--- Quick reset function for testing
-CREATE OR REPLACE FUNCTION reset_test_data()
-RETURNS TEXT AS $$
-BEGIN
-  -- Clear all data (be careful!)
-  DELETE FROM offers;
-  DELETE FROM items;
-  DELETE FROM profiles WHERE id IN (SELECT id FROM auth.users WHERE email LIKE '%@test.com');
-  DELETE FROM auth.users WHERE email LIKE '%@test.com';
-  
-  RETURN 'Test data cleared!';
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+-- Create profiles for any auth users who don't have profiles yet
+INSERT INTO profiles (id, username, display_name, created_at, updated_at)
+SELECT DISTINCT 
+  au.id,
+  COALESCE(
+    (au.raw_user_meta_data->>'username')::text,
+    au.email,
+    'user_' || SUBSTRING(au.id::text, 1, 8)
+  ) as username,
+  COALESCE(
+    (au.raw_user_meta_data->>'username')::text,
+    au.email,
+    'User ' || SUBSTRING(au.id::text, 1, 8)
+  ) as display_name,
+  NOW() as created_at,
+  NOW() as updated_at
+FROM auth.users au
+LEFT JOIN profiles p ON au.id = p.id
+WHERE p.id IS NULL
+ON CONFLICT (id) DO NOTHING;

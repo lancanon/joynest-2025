@@ -8,12 +8,18 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 // Types for our database tables
 export interface Profile {
   id: string
-  username: string
+  username?: string
   full_name?: string
+  display_name?: string
   avatar_url?: string
-  bio?: string
   created_at: string
   updated_at: string
+}
+
+// Helper function to get display name with fallback logic
+export const getDisplayName = (profile: Profile | null): string => {
+  if (!profile) return 'Unknown User'
+  return profile.display_name || profile.full_name || profile.username || 'Unknown User'
 }
 
 export interface Item {

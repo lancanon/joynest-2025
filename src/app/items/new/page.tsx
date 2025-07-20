@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import Navigation from '@/components/Navigation'
@@ -20,34 +20,48 @@ export default function NewItemPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
 
-  // Handle redirect for unauthenticated users
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/auth/login')
-    }
-  }, [user, authLoading, router])
+  // Memoize styles for better performance
+  const containerStyles = useMemo(() => ({
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '60px',
+    maxWidth: '1200px'
+  }), [])
 
-  // Show loading while checking authentication
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Navigation />
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
-            <div className="h-64 bg-gray-200 rounded"></div>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  const leftContainerStyles = useMemo(() => ({
+    maxWidth: '400px',
+    backgroundColor: 'rgba(255, 255, 255, 0)',
+    padding: '20px',
+    textAlign: 'left' as const,
+    color: '#333',
+    flexShrink: 0
+  }), [])
 
-  // Don't render anything while redirecting
-  if (!user) {
-    return null
-  }
+  const formContainerStyles = useMemo(() => ({
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    textAlign: 'left' as const,
+    padding: '20px',
+    boxShadow: '0 4px 8px rgba(89, 74, 48, 0.4)',
+    borderRadius: '10px',
+    backgroundColor: '#333',
+    color: '#fff',
+    width: '480px',
+    minHeight: '600px',
+    maxHeight: '650px',
+    overflow: 'hidden'
+  }), [])
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const formStyles = useMemo(() => ({
+    maxWidth: '480px',
+    width: '100%',
+    height: '100%',
+    overflow: 'auto'
+  }), [])
+
+  // Handle form submission with useCallback for optimization
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
@@ -61,6 +75,12 @@ export default function NewItemPage() {
     const priceValue = parseFloat(price)
     if (isNaN(priceValue) || priceValue <= 0) {
       setError('Please enter a valid price')
+      setLoading(false)
+      return
+    }
+
+    if (!user) {
+      setError('User not authenticated')
       setLoading(false)
       return
     }
@@ -98,30 +118,43 @@ export default function NewItemPage() {
     } finally {
       setLoading(false)
     }
+  }, [title, description, price, condition, category, imageUrl, user, router])
+
+  // Handle redirect for unauthenticated users
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/auth/login')
+    }
+  }, [user, authLoading, router])
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navigation />
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
+            <div className="h-64 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't render anything while redirecting
+  if (!user) {
+    return null
   }
 
   return (
     <>
       <Navigation />
-      <div className="min-h-screen flex justify-center items-center pt-10 pb-20 px-5">
+      <div className="min-h-screen flex justify-center items-center pt-10 pb-20 px-5" style={{ marginTop: '-20px' }}>
         {/* Container for both text and form */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '60px',
-          maxWidth: '1200px'
-        }}>
+        <div style={containerStyles}>
           {/* Left side - Header text */}
-          <div 
-            className="left-container"
-            style={{
-              maxWidth: '400px',
-              backgroundColor: 'rgba(255, 255, 255, 0)',
-              padding: '20px',
-              textAlign: 'left',
-              color: '#333'
-            }}
-          >
+          <div className="left-container" style={leftContainerStyles}>
             <h2 style={{
               fontSize: '3.5em',
               margin: '30px',
@@ -136,27 +169,10 @@ export default function NewItemPage() {
           </div>
         
           {/* Right side - Form container */}
-          <div 
-            className="listing-section"
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              textAlign: 'left',
-              padding: '20px',
-              boxShadow: '0 4px 8px rgba(89, 74, 48, 0.4)',
-              borderRadius: '10px',
-              backgroundColor: '#333',
-              color: '#fff',
-              width: '480px'
-            }}
-          >
+          <div className="listing-section" style={formContainerStyles}>
         <h2 style={{ fontSize: '1.2em' }}>List New Item</h2>
         
-        <form 
-          onSubmit={handleSubmit} 
-          style={{ maxWidth: '480px', width: '100%' }}
-        >
+        <form onSubmit={handleSubmit} style={formStyles}>
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md mb-4">
               {error}
