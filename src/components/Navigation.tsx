@@ -5,11 +5,10 @@ import Image from 'next/image'
 import { useAuth } from '@/contexts/AuthContext'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase, Profile } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 
 export default function Navigation() {
   const { user, signOut } = useAuth()
-  const [profile, setProfile] = useState<Profile | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const router = useRouter()
 
@@ -23,7 +22,7 @@ export default function Navigation() {
     if (!user) return
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
@@ -32,16 +31,16 @@ export default function Navigation() {
       if (error) {
         if (error.code === 'PGRST116') {
           // Profile doesn't exist yet, that's okay
-          console.log('Profile not found, will be created on next login')
         } else {
           console.warn('Profile fetch error:', error.message || 'Unknown error')
         }
         return
       }
 
-      setProfile(data)
+      // Profile fetched successfully but not stored in state since we don't use it
     } catch (error) {
       console.warn('Error fetching profile:', error instanceof Error ? error.message : 'Unknown error')
+      // If it's an auth error, the user will be signed out by AuthContext
     }
   }
 

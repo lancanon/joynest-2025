@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import { Item, supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { DollarSign, ImageIcon, Star } from 'lucide-react'
+import { DollarSign, ImageIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 interface ItemCardProps {
@@ -12,7 +12,6 @@ interface ItemCardProps {
 
 export default function ItemCard({ item }: ItemCardProps) {
   const { user } = useAuth()
-  const isOwner = user?.id === item.user_id
   const [offersCount, setOffersCount] = useState(0)
 
   useEffect(() => {
@@ -23,19 +22,7 @@ export default function ItemCard({ item }: ItemCardProps) {
 
   const fetchOffersCount = async () => {
     try {
-      // Try to use the public view first (more efficient)
-      const { data: stats, error: statsError } = await supabase
-        .from('public_offer_stats')
-        .select('total_offers')
-        .eq('item_id', item.id)
-        .single()
-
-      if (!statsError && stats) {
-        setOffersCount(stats.total_offers || 0)
-        return
-      }
-
-      // Fallback to direct query
+      // Direct query to offers table
       const { count, error } = await supabase
         .from('offers')
         .select('*', { count: 'exact', head: true })

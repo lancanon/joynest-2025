@@ -302,3 +302,13 @@ body, h1, h2, p, ul, li {
     -webkit-line-clamp: 3;
   }
 }
+
+/* Custom component styles */
+.browse-main {
+  margin-top: 40px;
+}
+
+.filter-section {
+  margin-top: 100px;
+  margin-left: 30px;
+}

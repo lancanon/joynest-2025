@@ -215,7 +215,7 @@ export default function LoginPage() {
                 borderTop: '1px solid #555' 
               }}>
                 <p style={{ fontSize: '14px', color: '#ccc' }}>
-                  Don't have an account?{' '}
+                  Don&apos;t have an account?{' '}
                   <Link
                     href="/auth/register"
                     style={{ 

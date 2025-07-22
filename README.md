@@ -1,6 +1,6 @@
 # Joynest - E-commerce Platform
 
-A modern e-commerce web application built with Next.js 15, TypeScript, and Supabase. Users can register, login, create items for sale, make offers, and manage their listings.
+A modern, production-ready e-commerce web application built with Next.js 15, TypeScript, and Supabase. Features secure user authentication, real-time item browsing, offer management, and a robust purchase system with Row Level Security.
 
 ## Features
 

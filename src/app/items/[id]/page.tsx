@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import Navigation from '@/components/Navigation'
 import { supabase, Item, Offer, Profile, getDisplayName } from '@/lib/supabase'
+import { purchaseItem } from '@/lib/purchase-actions'
 import { DollarSign, Edit, Trash2, Clock, CheckCircle, XCircle, Eye, ShoppingCart, MessageSquare } from 'lucide-react'
 import Image from 'next/image'
 
@@ -108,6 +109,7 @@ export default function ItemPage() {
   const { user } = useAuth()
   const [item, setItem] = useState<Item | null>(null)
   const [seller, setSeller] = useState<Profile | null>(null)
+  const [buyer, setBuyer] = useState<Profile | null>(null)
   const [offers, setOffers] = useState<Offer[]>([])
   const [loading, setLoading] = useState(true)
   const [offerAmount, setOfferAmount] = useState('')
@@ -129,6 +131,7 @@ export default function ItemPage() {
       
       setItem(data)
       
+      // Fetch seller profile
       if (data.user_id) {
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
@@ -137,11 +140,24 @@ export default function ItemPage() {
           .single()
         
         if (profileError) {
-          console.log('Profile not found for user:', data.user_id, profileError)
-          // If no profile exists, we'll show "Unknown User" via getDisplayName
           setSeller(null)
         } else {
           setSeller(profileData)
+        }
+      }
+
+      // Fetch buyer profile if item is sold
+      if (data.buyer_id) {
+        const { data: buyerData, error: buyerError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.buyer_id)
+          .single()
+        
+        if (buyerError) {
+          setBuyer(null)
+        } else {
+          setBuyer(buyerData)
         }
       }
     } catch (error) {
@@ -167,10 +183,28 @@ export default function ItemPage() {
     }
   }, [itemId, fetchItem, fetchOffers])
 
+  // Refresh data when page becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchItem()
+        fetchOffers()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [fetchItem, fetchOffers])
+
   const handleSubmitOffer = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user) {
       router.push('/auth/login')
+      return
+    }
+
+    if (item?.is_sold) {
+      setError('This item has already been sold')
       return
     }
     
@@ -199,12 +233,12 @@ export default function ItemPage() {
       setOfferAmount('')
       setShowOfferModal(false)
       fetchOffers()
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred')
     } finally {
       setSubmittingOffer(false)
     }
-  }, [user, offerAmount, itemId, router, fetchOffers])
+  }, [user, offerAmount, itemId, router, fetchOffers, item?.is_sold])
 
   const handleOfferAction = useCallback(async (offerId: string, action: 'accepted' | 'rejected') => {
     try {
@@ -213,12 +247,81 @@ export default function ItemPage() {
         alert(`Failed to ${action} offer: ${error.message}`)
         return
       }
-      fetchOffers()
+      
+      if (action === 'accepted') {
+        // Mark item as sold (simplified version without buyer_id)
+        const { error: itemError } = await supabase
+          .from('items')
+          .update({ 
+            is_sold: true,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', itemId)
+
+        if (itemError) {
+          console.error('Failed to mark item as sold:', itemError)
+        }
+
+        // Reject all other pending offers
+        const { error: rejectError } = await supabase
+          .from('offers')
+          .update({ status: 'rejected' })
+          .eq('item_id', itemId)
+          .eq('status', 'pending')
+          .neq('id', offerId)
+
+        if (rejectError) {
+          console.error('Failed to reject other offers:', rejectError)
+        }
+
+        alert('Offer accepted! The item has been sold.')
+        // Redirect to profile page to see sold items
+        router.push('/profile')
+      } else {
+        // Just refresh offers for rejected offers
+        fetchOffers()
+        fetchItem()
+      }
     } catch (error) {
       console.error('Error:', error)
       alert('An unexpected error occurred')
     }
-  }, [fetchOffers])
+  }, [fetchOffers, fetchItem, router, itemId])
+
+  const handleBuyNow = useCallback(async () => {
+    if (!user) {
+      router.push('/auth/login')
+      return
+    }
+
+    if (!item) {
+      return
+    }
+
+    const confirmed = confirm(`Are you sure you want to buy "${item.title}" for $${item.price.toFixed(2)}?`)
+    if (!confirmed) {
+      return
+    }
+
+    try {
+      const result = await purchaseItem(itemId, user.id)
+
+      if (!result.success) {
+        alert('Purchase failed: ' + (result.error || 'Unknown error'))
+        
+        if (result.error && (result.error.includes('already sold') || result.error.includes('sold by someone else'))) {
+          window.location.href = '/browse'
+        }
+        return
+      }
+
+      alert('Purchase successful! The item is now yours.')
+      window.location.href = '/browse'
+    } catch (error) {
+      console.error('Purchase error:', error)
+      alert('An unexpected error occurred during purchase')
+    }
+  }, [user, item, itemId, router])
 
   const handleDeleteItem = useCallback(async () => {
     if (!confirm('Are you sure you want to delete this item?')) return
@@ -233,6 +336,7 @@ export default function ItemPage() {
   // Memoize computed values
   const pendingOffers = useMemo(() => offers.filter(offer => offer.status === 'pending'), [offers])
   const sellerName = useMemo(() => getDisplayName(seller), [seller])
+  const buyerName = useMemo(() => getDisplayName(buyer), [buyer])
 
   // Early returns for loading and error states
   if (loading) {
@@ -251,7 +355,14 @@ export default function ItemPage() {
           {/* Item Image */}
           <div style={styles.imageContainer}>
             {item.image_url ? (
-              <Image src={item.image_url} alt={item.title} fill className="object-cover" />
+              <Image 
+                src={item.image_url} 
+                alt={item.title} 
+                fill 
+                className="object-cover"
+                sizes="500px"
+                priority
+              />
             ) : (
               <div className="flex items-center justify-center h-full text-gray-400">
                 <Eye className="h-24 w-24" />
@@ -272,8 +383,31 @@ export default function ItemPage() {
               </div>
 
               <div style={{ marginBottom: '20px' }}>
-                <InfoField label="Seller" value={sellerName} isLast />
+                <InfoField label="Seller" value={sellerName} isLast={!item.is_sold} />
               </div>
+
+              {/* Show buyer info if item is sold */}
+              {item.is_sold && (
+                <div style={{ marginBottom: '20px' }}>
+                  <InfoField label="Buyer" value={buyerName} isLast />
+                </div>
+              )}
+
+              {/* Sold status indicator */}
+              {item.is_sold && (
+                <div style={{ 
+                  marginBottom: '20px', 
+                  padding: '12px', 
+                  backgroundColor: 'rgba(220, 53, 69, 0.1)', 
+                  border: '2px solid #dc3545', 
+                  borderRadius: '8px',
+                  textAlign: 'center'
+                }}>
+                  <span style={{ color: '#dc3545', fontWeight: 'bold', fontSize: '1.1em' }}>
+                    🔴 SOLD
+                  </span>
+                </div>
+              )}
 
               <div style={{ marginBottom: '20px' }}>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9em' }}>Description:</label>
@@ -282,16 +416,32 @@ export default function ItemPage() {
 
               {/* Actions */}
               <div style={{ marginTop: '20px' }}>
-                {isOwner ? (
+                {item.is_sold ? (
+                  // Item is sold - show sold message
+                  <div style={{ 
+                    padding: '15px', 
+                    backgroundColor: 'rgba(220, 53, 69, 0.1)', 
+                    border: '1px solid rgba(220, 53, 69, 0.3)', 
+                    borderRadius: '5px', 
+                    marginBottom: '15px' 
+                  }}>
+                    <p style={{ margin: 0, textAlign: 'center', color: '#dc3545', fontWeight: 'bold' }}>
+                      This item has been sold to {buyerName}
+                    </p>
+                  </div>
+                ) : isOwner ? (
+                  // Owner actions
                   <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
                     <ActionButton onClick={() => router.push(`/items/${item.id}/edit`)} color="#4CAF50" icon={<Edit className="h-4 w-4" />} style={{ flex: 1 }}>Edit</ActionButton>
                     <ActionButton onClick={handleDeleteItem} color="#dc3545" icon={<Trash2 className="h-4 w-4" />} style={{ flex: 1 }}>Delete</ActionButton>
                   </div>
                 ) : user ? (
+                  // Buyer actions (only if not sold)
                   <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-                    <ActionButton onClick={() => {}} color="#007bff" icon={<ShoppingCart className="h-4 w-4" />} style={{ flex: 1 }}>Buy Now</ActionButton>
+                    <ActionButton onClick={handleBuyNow} color="#007bff" icon={<ShoppingCart className="h-4 w-4" />} style={{ flex: 1 }}>Buy Now</ActionButton>
                   </div>
                 ) : (
+                  // Not logged in
                   <div style={{ padding: '15px', backgroundColor: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '5px', marginBottom: '15px' }}>
                     <p style={{ margin: 0, textAlign: 'center' }}>
                       <a href="/auth/login" style={{ color: '#60a5fa', textDecoration: 'underline' }}>Sign in</a> or <a href="/auth/register" style={{ color: '#60a5fa', textDecoration: 'underline' }}>create an account</a> to buy or make offers.
@@ -299,8 +449,8 @@ export default function ItemPage() {
                   </div>
                 )}
 
-                {/* Place Offer Button */}
-                {!isOwner && user && (
+                {/* Place Offer Button - only show if not sold, not owner, and user is logged in */}
+                {!item.is_sold && !isOwner && user && (
                   <button 
                     onClick={() => setShowOfferModal(true)} 
                     style={{ 
@@ -320,7 +470,7 @@ export default function ItemPage() {
                   </button>
                 )}
 
-                {/* View Offers Button */}
+                {/* View Offers Button - only show for owners */}
                 {isOwner && (
                   <ActionButton onClick={() => setShowOffers(!showOffers)} color="#6c757d" icon={<MessageSquare className="h-4 w-4" />} style={{ width: '100%' }}>
                     {showOffers ? 'Hide' : 'View'} Offers ({offers.length})

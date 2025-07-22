@@ -34,7 +34,7 @@ export default function BrowsePage() {
     <div className="min-h-screen bg-gray-50">
       <Navigation />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style={{marginTop: '40px'}}>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 browse-main">
         <div className="flex gap-12">
           
           {/* FILTER SIDEBAR */}
@@ -42,7 +42,7 @@ export default function BrowsePage() {
             <div className="bg-white p-8 rounded-lg shadow-sm">
               
               {/* Category Filter */}
-              <div className="mb-10 ml-6" style={{marginTop: '100px', marginLeft: '30px'}}>
+              <div className="mb-10 ml-6 filter-section">
                 <div 
                   onClick={() => setCategoryExpanded(!categoryExpanded)}
                   className="flex items-end justify-between cursor-pointer mb-6 pb-3 h-16"
@@ -112,7 +112,7 @@ export default function BrowsePage() {
 
           {/* MAIN CONTENT GRID */}
           <div className="flex-1">
-            <h1 className="text-3xl font-bold text-gray-900 mb-8" style={{marginLeft: '200px'}}>Browse Items</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-8" style={{marginLeft: '180px'}}>Browse Items</h1>
             <div className="bg-white p-6 rounded-lg shadow-sm">
               <ItemsList 
                 selectedConditions={selectedConditions}

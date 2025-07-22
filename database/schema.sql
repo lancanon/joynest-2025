@@ -1,6 +1,28 @@
--- ===== JOYNEST E-COMMERCE DATABASE SCHEMA =====
--- Next.js 15 + Supabase + TypeScript E-commerce Application
--- Features: Item listings, offers, user profiles with display names
+-- ================================================
+-- JOYNEST E-COMMERCE DATABASE SCHEMA
+-- ================================================
+-- 
+-- A complete database schema for a modern e-commerce marketplace
+-- Built for Next.js 15 + Supabase + TypeScript
+--
+-- Features:
+-- • User authentication with Supabase Auth
+-- • Item listings with categories and conditions  
+-- • Offer system with automatic status handling
+-- • Purchase system with buyer tracking
+-- • Row Level Security (RLS) for data protection
+-- • Automatic profile creation for new users
+-- • Image storage with proper policies
+-- • Optimized indexes for performance
+--
+-- Usage:
+-- 1. Run this script in your Supabase SQL editor
+-- 2. All tables, policies, functions, and triggers will be created
+-- 3. The system is ready for production use
+--
+-- Author: Audy Vee
+-- Last Updated: July 2025
+-- ================================================
 
 -- Create the items table
 CREATE TABLE IF NOT EXISTS items (
@@ -11,6 +33,8 @@ CREATE TABLE IF NOT EXISTS items (
   condition VARCHAR(50) DEFAULT 'Good' CHECK (condition IN ('Mint', 'Excellent', 'Good', 'Fair', 'Poor')),
   category VARCHAR(100) DEFAULT 'Other' CHECK (category IN ('Kitchen', 'Living Room', 'Bedroom', 'Bathroom', 'Office', 'Outdoor', 'Electronics', 'Clothing', 'Other')),
   image_url TEXT,
+  is_sold BOOLEAN DEFAULT FALSE,
+  buyer_id UUID REFERENCES auth.users(id) ON DELETE SET NULL, -- Who bought the item
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
@@ -42,16 +66,47 @@ CREATE TABLE IF NOT EXISTS offers (
 
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS items_user_id_idx ON items(user_id);
+CREATE INDEX IF NOT EXISTS items_buyer_id_idx ON items(buyer_id);
 CREATE INDEX IF NOT EXISTS items_created_at_idx ON items(created_at DESC);
+CREATE INDEX IF NOT EXISTS items_is_sold_idx ON items(is_sold);
 CREATE INDEX IF NOT EXISTS offers_item_id_idx ON offers(item_id);
 CREATE INDEX IF NOT EXISTS offers_user_id_idx ON offers(user_id);
 CREATE INDEX IF NOT EXISTS offers_status_idx ON offers(status);
 CREATE INDEX IF NOT EXISTS profiles_username_idx ON profiles(username);
 
+-- Add is_sold column if it doesn't exist (for existing databases)
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'items' AND column_name = 'is_sold') THEN
+        ALTER TABLE items ADD COLUMN is_sold BOOLEAN DEFAULT FALSE;
+    END IF;
+    
+    -- Add buyer_id column if it doesn't exist
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'items' AND column_name = 'buyer_id') THEN
+        ALTER TABLE items ADD COLUMN buyer_id UUID REFERENCES auth.users(id) ON DELETE SET NULL;
+    END IF;
+END $$;
+
 -- Enable Row Level Security (RLS)
 ALTER TABLE items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE offers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if they exist (for clean setup)
+DROP POLICY IF EXISTS "Anyone can view items" ON items;
+DROP POLICY IF EXISTS "Users can insert their own items" ON items;
+DROP POLICY IF EXISTS "Users can update their own items" ON items;
+DROP POLICY IF EXISTS "Users can delete their own items" ON items;
+DROP POLICY IF EXISTS "Anyone can view profiles" ON profiles;
+DROP POLICY IF EXISTS "Users can insert their own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can update their own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can delete their own profile" ON profiles;
+DROP POLICY IF EXISTS "Item owners and offer creators can view offers" ON offers;
+DROP POLICY IF EXISTS "Users can insert offers on others' items" ON offers;
+DROP POLICY IF EXISTS "Item owners can update offer status" ON offers;
+DROP POLICY IF EXISTS "Users can delete their own pending offers" ON offers;
 
 -- RLS Policies for items table
 -- Anyone can view items
@@ -97,12 +152,15 @@ CREATE POLICY "Item owners and offer creators can view offers" ON offers
     )
   );
 
--- Authenticated users can insert offers (but not on their own items)
+-- Authenticated users can insert offers (but not on their own items or sold items)
 CREATE POLICY "Users can insert offers on others' items" ON offers
   FOR INSERT WITH CHECK (
     auth.uid() = user_id AND
     auth.uid() != (
       SELECT user_id FROM items WHERE id = offers.item_id
+    ) AND
+    NOT EXISTS (
+      SELECT 1 FROM items WHERE id = offers.item_id AND is_sold = TRUE
     )
   );
 
@@ -174,6 +232,37 @@ CREATE TRIGGER update_items_updated_at BEFORE UPDATE ON items
 CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON profiles
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+-- Function to handle offer acceptance and mark item as sold
+CREATE OR REPLACE FUNCTION handle_offer_acceptance()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- If offer status changed to 'accepted', mark the item as sold and set buyer
+  IF NEW.status = 'accepted' AND OLD.status != 'accepted' THEN
+    UPDATE items 
+    SET is_sold = TRUE, 
+        buyer_id = NEW.user_id,
+        updated_at = TIMEZONE('utc'::text, NOW())
+    WHERE id = NEW.item_id;
+    
+    -- Reject all other pending offers for this item
+    UPDATE offers 
+    SET status = 'rejected'
+    WHERE item_id = NEW.item_id 
+      AND id != NEW.id 
+      AND status = 'pending';
+  END IF;
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger to automatically handle item sale when offer is accepted
+CREATE OR REPLACE TRIGGER on_offer_status_change
+  AFTER UPDATE ON offers
+  FOR EACH ROW 
+  WHEN (NEW.status IS DISTINCT FROM OLD.status)
+  EXECUTE FUNCTION handle_offer_acceptance();
+
 -- Function to handle new user registration (creates profile automatically)
 -- This ensures every new user gets a profile with display_name set to their username
 CREATE OR REPLACE FUNCTION handle_new_user()
@@ -240,3 +329,29 @@ FROM auth.users au
 LEFT JOIN profiles p ON au.id = p.id
 WHERE p.id IS NULL
 ON CONFLICT (id) DO NOTHING;
+
+-- ===== SCHEMA VALIDATION =====
+-- Verify that all required tables exist
+DO $$
+BEGIN
+  -- Check if all required tables exist
+  IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'items') THEN
+    RAISE EXCEPTION 'Items table not created';
+  END IF;
+  
+  IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'profiles') THEN
+    RAISE EXCEPTION 'Profiles table not created';
+  END IF;
+  
+  IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'offers') THEN
+    RAISE EXCEPTION 'Offers table not created';
+  END IF;
+  
+  -- Check if RLS is enabled
+  IF NOT EXISTS (SELECT 1 FROM pg_tables WHERE tablename = 'items' AND rowsecurity = true) THEN
+    RAISE EXCEPTION 'RLS not enabled on items table';
+  END IF;
+  
+  RAISE NOTICE 'Database schema successfully created and validated!';
+  RAISE NOTICE 'Joynest e-commerce platform is ready for use.';
+END $$;

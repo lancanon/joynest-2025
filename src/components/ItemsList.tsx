@@ -4,9 +4,10 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase, Item } from '@/lib/supabase'
+import { handleAuthError } from '@/lib/auth-utils'
 import { useAuth } from '@/contexts/AuthContext'
 import ItemCard from '@/components/ItemCard'
-import { Plus, ShoppingBag, Search } from 'lucide-react'
+import { ShoppingBag, Search } from 'lucide-react'
 
 interface ItemsListProps {
   selectedConditions?: string[]
@@ -29,9 +30,11 @@ export default function ItemsList({ selectedConditions = [], selectedCategories 
 
   const fetchItems = async (query?: string) => {
     try {
+      setLoading(true)
       let supabaseQuery = supabase
         .from('items')
         .select('*')
+        .eq('is_sold', false)
         .order('created_at', { ascending: false })
 
       // If there's a search query, filter results
@@ -45,21 +48,23 @@ export default function ItemsList({ selectedConditions = [], selectedCategories 
 
       if (error) {
         console.error('Error fetching items:', error)
+        await handleAuthError(error)
+        setItems([])
         return
       }
 
-      let filteredData = data || []
+      let filteredData: Item[] = data || []
 
       // Apply condition filters
       if (selectedConditions.length > 0) {
-        filteredData = filteredData.filter(item => 
+        filteredData = filteredData.filter((item: Item) => 
           selectedConditions.includes(item.condition?.toLowerCase() || '')
         )
       }
 
       // Apply category filters
       if (selectedCategories.length > 0) {
-        filteredData = filteredData.filter(item => 
+        filteredData = filteredData.filter((item: Item) => 
           selectedCategories.includes(item.category?.toLowerCase() || '')
         )
       }
@@ -67,6 +72,8 @@ export default function ItemsList({ selectedConditions = [], selectedCategories 
       setItems(filteredData)
     } catch (error) {
       console.error('Error:', error)
+      await handleAuthError(error)
+      setItems([])
     } finally {
       setLoading(false)
     }
@@ -89,7 +96,7 @@ export default function ItemsList({ selectedConditions = [], selectedCategories 
         {searchQuery ? (
           <>
             <h3 className="text-3xl font-bold text-gray-900 mb-4">
-              No items found for "{searchQuery}"
+              No items found for &quot;{searchQuery}&quot;
             </h3>
             <p className="text-gray-600 mb-8 max-w-md mx-auto text-lg">
               Try searching with different keywords or browse all items.
@@ -133,7 +140,7 @@ export default function ItemsList({ selectedConditions = [], selectedCategories 
             <>
               <h2 className="text-2xl font-bold text-gray-900 flex items-center justify-center gap-2">
                 <Search className="h-6 w-6" />
-                Showing Results for "{searchQuery}"
+                Showing Results for &quot;{searchQuery}&quot;
               </h2>
               <p className="text-gray-600 text-sm mt-2">
                 {items.length} item{items.length !== 1 ? 's' : ''} found
@@ -146,15 +153,16 @@ export default function ItemsList({ selectedConditions = [], selectedCategories 
         </div>
       </div>
 
-      {/* Items Grid - 4x4 Layout */}
+      {/* Items Grid - Dynamic Centered Layout */}
       <div className="flex justify-center" style={{marginTop: '60px'}}>
         <div 
-          className="grid gap-6 max-w-7xl w-full px-4"
+          className="grid gap-6 w-full px-4"
           style={{ 
             display: 'grid', 
-            gridTemplateColumns: 'repeat(4, 300px)',
-            gap: '1.5rem',
-            justifyContent: 'center'
+            gridTemplateColumns: `repeat(${Math.min(items.length, 4)}, 300px)`,
+            gap: '2.5rem',
+            justifyContent: 'center',
+            maxWidth: '1400px'
           }}
         >
           {items.map((item) => (
